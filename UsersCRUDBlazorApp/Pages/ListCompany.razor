@@ -1,0 +1,62 @@
+﻿@page "/list-company"
+
+@inject GrpcChannel Channel
+
+<PageTitle>Список компаний</PageTitle>
+
+<NavPanel />
+
+<h2>Список компаний</h2>
+<div class="panel-tools">
+    <a class="link-bnt" href="/create-company">Добавить</a>
+    <button class="base-bnt" @onclick="OnClickUpdateListComponyBnt" type="button">Обновить</button>
+</div>
+<table class="table-company">
+    <thead>
+        <tr>
+            <th class="col-1">ID</th>
+            <th class="col-2">Название</th>
+            <th class="col-3">Годовая прибыль</th>
+            <th class="col-4"></th>
+            <th class="col-5"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (CompanyMessage company in CompanyMessages)
+        {
+            <ComponyStrokeInTableView Company="company" OnDelete="OnDeleteCompony" />
+        }
+    </tbody>
+
+</table>
+
+@code {
+    public List<CompanyMessage> CompanyMessages { get; set; } = new List<CompanyMessage>();
+
+    protected override async void OnInitialized()
+    {
+        await UpdateListCompony();
+        Console.WriteLine(CompanyMessages.Count);
+    }
+
+    #region events
+    private async void OnClickUpdateListComponyBnt()
+    {
+        await UpdateListCompony();
+    }
+    #endregion
+
+    private async Task UpdateListCompony()
+    {
+        CrudCompanysClient client = new CrudCompanysClient(Channel);
+        ListCompanysReply listCompanysReply = await client.ListCompanysAsync(new Google.Protobuf.WellKnownTypes.Empty());
+        CompanyMessages = listCompanysReply.Companys.ToList();
+        StateHasChanged();
+    }
+
+    private void OnDeleteCompony(CompanyMessage company)
+    {
+        CompanyMessages.Remove(company);
+        StateHasChanged();
+    }
+}

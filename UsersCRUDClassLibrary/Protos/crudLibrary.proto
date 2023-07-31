@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+
+option csharp_namespace = "UsersCRUDClassLibrary.CrudLibraryProto";
+
+import "google/protobuf/timestamp.proto";
+
+package crudLibrary;
+
+message CompanyMessage{
+	int32 id = 1;
+	string name = 2;
+	string sity = 3;
+	double incomeYear = 4;
+	repeated EmployeeMessage employees = 5;
+}
+
+message EmployeeMessage{
+	int32 id = 1;
+	string surname = 2;
+	string name = 3;
+	string patronymic = 4;
+	int32 companyId = 5;
+	CompanyMessage company = 6;
+	string post = 7;
+	double salary = 8;
+	google.protobuf.Timestamp termContactForData = 9;
+}
+
+message MessageReply{
+	string text = 1;
+}

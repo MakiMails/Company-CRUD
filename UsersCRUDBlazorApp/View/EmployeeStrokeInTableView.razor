@@ -1,0 +1,65 @@
+﻿@inject GrpcChannel Channel
+@inject NavigationManager NavigationManager
+
+<tr>
+    <td class="col-1">@Employee.Id</td>
+    <td class="col-2">@Employee.Surname</td>
+    <td class="col-3">@Employee.Name</td>
+    <td class="col-4">@Employee.Patronymic</td>
+    @if (Employee.Company != null)
+    {
+        <td class="col-5">@Employee.Company.Name</td>
+    }
+    <td class="col-6">@Employee.Post</td>
+    <td class="col-7">@Employee.Salary</td>
+    <td class="col-8">@Employee.TermContactForData.ToDateTime().ToString("d")</td>
+    <td class="col-9">
+        <button class="table-bnt" @onclick="OnClickEditEmployeeBnt">
+            <img src="img/icons/edit.svg" width="20" height="20">
+    </button></td>
+    <td class="col-10">
+        <button class="table-bnt" @onclick="OnClickDeleteEmployeeBnt">
+            <img src="img/icons/remove.svg" width="20" height="20">
+    </button></td>
+</tr>
+
+@code {
+
+    [Parameter]
+    public EmployeeMessage? Employee { get; set; }
+    [Parameter]
+    public Action<EmployeeMessage>? OnDelete { get; set; }
+    [Parameter]
+    public int IdCompany { get; set; } = -1;
+
+    #region events
+    private async void OnClickDeleteEmployeeBnt()
+    {
+        await DeleteEmployee();
+    }
+
+    private async void OnClickEditEmployeeBnt()
+    {
+        await ToGoEditPageEmployee();
+    }
+    #endregion
+
+    private async Task DeleteEmployee()
+    {
+        OnDelete?.Invoke(Employee);
+        CrudEmployeesClient client = new CrudEmployeesClient(Channel);
+        MessageReply messageReply = await client.DeleteEmployeeAsync(new DeleteEmployeeRequest() { Id = Employee.Id });
+    }
+
+    private async Task ToGoEditPageEmployee()
+    {
+        if (IdCompany != -1)
+        {
+            NavigationManager.NavigateTo($"edit-employee/{Employee.Id}/{IdCompany}");
+        }
+        else
+        {
+            NavigationManager.NavigateTo($"edit-employee/{Employee.Id}");
+        }
+    }
+}

@@ -1,0 +1,103 @@
+﻿@page "/edit-company/{id:int}"
+@inject GrpcChannel Channel
+@inject NavigationManager NavigationManager
+
+<PageTitle>Редактирование компании</PageTitle>
+
+<form class="form-base">
+    <label>Название</label>
+    <input type="text" @bind-value="Company.Name" />
+    <label>Город</label>
+    <input type="text" @bind-value="Company.Sity" />
+    <label>Годовая прибыль</label>
+    <input type="number" @bind-value="Company.IncomeYear" />
+    <button class="base-bnt" type="button" onclick="@OnSaveChangeComponyBnt">Сохранить</button>
+
+</form>
+<h2>Сотрудники</h2>
+<div class="panel-tools">
+    <button class="base-bnt" onclick="@OnClickAddEmployeeBnt">Добавить</button>
+</div>
+<table class="table-employee">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Фамилия</th>
+            <th>Имя</th>
+            <th>Отчество</th>
+            <th>Должность</th>
+            <th>Зарплата</th>
+            <th>Дата истечения контракта</th>
+            <th></th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (EmployeeMessage employee in EmployeeMessages)
+        {
+            <EmployeeStrokeInTableView Employee="employee" IdCompany="Id" />
+        }
+    </tbody>
+</table>
+
+
+
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    public CompanyMessage Company { get; set; } = new CompanyMessage();
+    public List<EmployeeMessage> EmployeeMessages { get; set; } = new List<EmployeeMessage>();
+
+    protected override async void OnInitialized()
+    {
+        await GetComponany();
+    }
+
+    private async void OnSaveChangeComponyBnt()
+    {
+        await SaveChangeCompony();
+        ToGoPageListCompony();
+    }
+
+    private void OnClickAddEmployeeBnt()
+    {
+        NavigationManager.NavigateTo($"create-employee/{Company.Id}");
+    }
+
+    private void OnDeleteEmployee(EmployeeMessage employeeMessage)
+    {
+        EmployeeMessages.Remove(employeeMessage);
+        StateHasChanged();
+    }
+
+    private async Task GetComponany()
+    {
+        CrudCompanysClient client = new CrudCompanysClient(Channel);
+
+        Company = await client.GetCompanyAsync(new GetCompanyRequest()
+            {
+                Id = Id,
+            });
+
+        EmployeeMessages = Company.Employees.ToList();
+        StateHasChanged();
+    }
+
+    private async Task SaveChangeCompony()
+    {
+        CrudCompanysClient client = new CrudCompanysClient(Channel);
+
+        MessageReply messageReply = await client.UpdateCompanyAsync(new UpdateCompanyRequest()
+            {
+                Company = Company
+            });
+    }
+
+    private void ToGoPageListCompony()
+    {
+        NavigationManager.NavigateTo("list-company");
+    }
+}

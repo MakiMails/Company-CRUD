@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+option csharp_namespace = "UsersCRUDClassLibrary.CrudCompanysProto";
+
+import "google/protobuf/empty.proto";
+import "Protos/crudLibrary.proto";
+
+package crudCompanys;
+
+service CrudCompanys {
+	rpc ListCompanys(google.protobuf.Empty) returns (ListCompanysReply);
+	rpc GetCompany(GetCompanyRequest) returns (crudLibrary.CompanyMessage);
+	rpc CreateCompany(CreateCompanyRequest) returns (crudLibrary.MessageReply);
+	rpc UpdateCompany(UpdateCompanyRequest) returns (crudLibrary.MessageReply);
+	rpc DeleteCompany(DeleteCompanyRequest) returns (crudLibrary.MessageReply);
+}
+
+message ListCompanysReply{
+	repeated crudLibrary.CompanyMessage companys = 1;
+}
+
+message GetCompanyRequest{
+	int32 id = 1;
+}
+
+message CreateCompanyRequest{
+	crudLibrary.CompanyMessage company = 1;
+}
+
+message UpdateCompanyRequest{
+	crudLibrary.CompanyMessage company = 1;
+}
+
+message DeleteCompanyRequest{
+	int32 id = 1;
+}

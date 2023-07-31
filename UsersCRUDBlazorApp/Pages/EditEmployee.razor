@@ -1,0 +1,80 @@
+﻿@page "/edit-employee/{id:int}/{idCompany:int?}"
+@inject GrpcChannel Channel
+@inject NavigationManager NavigationManager
+
+<PageTitle>Редактирование сотрудника</PageTitle>
+
+<h2>Работник</h2>
+<label>Фамилия</label>
+<input type="text" @bind-value="Employee.Surname" />
+<label>Имя</label>
+<input type="text" @bind-value="Employee.Name" />
+<label>Отчество</label>
+<input type="text" @bind-value="Employee.Patronymic" />
+<label>Должность</label>
+<input type="text" @bind-value="Employee.Post" />
+<label>Зарплата</label>
+<input type="number" @bind-value="Employee.Salary" />
+<label>Контракт годен до:</label>
+<input type="date" @bind-value="TermContactForData" />
+<button type="button" onclick="@OnClickSaveChangeEmployeeBnt">Сохранить изменения</button>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    [Parameter]
+    public int? IdCompany { get; set; }
+
+    public DateOnly TermContactForData { get; set; } = new DateOnly();
+
+    public EmployeeMessage Employee { get; set; } = new EmployeeMessage();
+
+    protected override async void OnInitialized()
+    {
+        Employee = await GetEmployee();
+        DateTime dateTime = Employee.TermContactForData.ToDateTime();
+        TermContactForData = new DateOnly(dateTime.Year, dateTime.Month, dateTime.Day);
+        StateHasChanged();
+    }
+
+    private async void OnClickSaveChangeEmployeeBnt()
+    {
+        await SaveChangeEmployee();
+
+        if (IdCompany != null)
+        {
+            ToGoPageEditCompony();
+        }
+        else
+        {
+            ToGoPageListEmployee();
+        }
+    }
+
+    private async Task<EmployeeMessage> GetEmployee()
+    {
+        CrudEmployeesClient clinent = new CrudEmployeesClient(Channel);
+        return await clinent.GetEmployeeAsync(new GetEmployeeRequest() { Id = Id });
+    }
+
+    private async Task SaveChangeEmployee()
+    {
+        CrudEmployeesClient client = new CrudEmployeesClient(Channel);
+
+        Employee.TermContactForData = Timestamp.FromDateTime(TermContactForData.ToDateTime(new TimeOnly()).ToUniversalTime());
+
+        await client.UpdateEmployeeAsync(new UpdateEmployeeRequest() { Employee = Employee});
+    }
+
+    private void ToGoPageListEmployee()
+    {
+        NavigationManager.NavigateTo("list-employee");
+    }
+
+    private void ToGoPageEditCompony()
+    {
+        NavigationManager.NavigateTo($"edit-company/{IdCompany}");
+    }
+}

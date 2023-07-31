@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+option csharp_namespace = "UsersCRUDClassLibrary.CrudEmployeesProto";
+
+import "google/protobuf/empty.proto";
+import "Protos/crudLibrary.proto";
+
+package crudEmployees;
+
+
+service CrudEmployees {
+	rpc ListEmployees(google.protobuf.Empty) returns (ListEmployeesReply);
+	rpc GetEmployee(GetEmployeeRequest) returns (crudLibrary.EmployeeMessage);
+	rpc CreateEmployee(CreateEmployeeRequest) returns (crudLibrary.MessageReply);
+	rpc UpdateEmployee(UpdateEmployeeRequest) returns (crudLibrary.MessageReply);
+	rpc DeleteEmployee(DeleteEmployeeRequest) returns (crudLibrary.MessageReply);
+}
+
+message ListEmployeesReply{
+	repeated crudLibrary.EmployeeMessage employees = 1;
+}
+
+message GetEmployeeRequest{
+	int32 id = 1;
+}
+
+message CreateEmployeeRequest{
+	crudLibrary.EmployeeMessage employee = 1;
+}
+
+message UpdateEmployeeRequest{
+	crudLibrary.EmployeeMessage employee = 1;
+}
+
+message DeleteEmployeeRequest{
+	int32 id = 1;
+}
+

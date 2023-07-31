@@ -1,0 +1,49 @@
+﻿@page "/create-company"
+@inject GrpcChannel Channel
+@inject NavigationManager NavigationManager
+
+<PageTitle>Добавление компании</PageTitle>
+
+<h2>Компания</h2>
+<form class="form-base">
+    <label>Название</label>
+    <input type="text" @bind-value="name" />
+    <label>Город</label>
+    <input type="text" @bind-value="sity" />
+    <label>Годовая прибыль</label>
+    <input type="number" @bind-value="incomeYear" />
+
+    <button class="base-bnt" type="button" @onclick="OnClickAddBnt">Добавить</button>
+</form>
+@code {
+
+    private string name = string.Empty;
+    private string sity = string.Empty;
+    private double incomeYear;
+
+    protected async void OnClickAddBnt()
+    {
+        await AddCompany();
+        ToGoPageListCompany();
+    }
+
+    private async Task AddCompany()
+    {
+        CrudCompanysClient crudCompanysClient = new CrudCompanysClient(Channel);
+
+        MessageReply messageReply = await crudCompanysClient.CreateCompanyAsync(new CreateCompanyRequest()
+            {
+                Company = new CompanyMessage()
+                {
+                    Name = name,
+                    Sity = sity,
+                    IncomeYear = incomeYear
+                }
+            });
+    }
+
+    private void ToGoPageListCompany()
+    {
+        NavigationManager.NavigateTo($"list-company");
+    }
+}

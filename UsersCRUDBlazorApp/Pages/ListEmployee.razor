@@ -1,0 +1,67 @@
+﻿@page "/list-employee"
+@inject GrpcChannel Channel
+
+<PageTitle>Список сотрудников</PageTitle>
+
+<NavPanel />
+
+<h2>Список работников</h2>
+<div class="panel-tools">
+    <a class="link-bnt" href="/create-employee">Добавить</a>
+    <button class="base-bnt" @onclick="OnClickUpdateListEmployeeBnt" type="button">Обновить</button>
+</div>
+<table class="table-employee">
+    <thead>
+        <tr>
+            <th class="col-1">ID</th>
+            <th class="col-2">Фамилия</th>
+            <th class="col-3">Имя</th>
+            <th class="col-4">Отчество</th>
+            <th class="col-5">Компания</th>
+            <th class="col-6">Должность</th>
+            <th class="col-7">Зарплата</th>
+            <th class="col-8">Дата истечения контракта</th>
+            <th class="col-9"></th>
+            <th class="col-10"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (EmployeeMessage employee in EmployeeMessages)
+        {
+            <EmployeeStrokeInTableView Employee="employee" OnDelete="OnDeleteEmployee" />
+        }
+    </tbody>
+</table>
+
+@code {
+
+    public List<EmployeeMessage> EmployeeMessages { get; set; } = new List<EmployeeMessage>();
+
+    protected override async void OnInitialized()
+    {
+        await UpdateListEmployee();
+    }
+
+    #region events
+    private async void OnClickUpdateListEmployeeBnt()
+    {
+        await UpdateListEmployee();
+    }
+
+    private void OnDeleteEmployee(EmployeeMessage employee)
+    {
+        EmployeeMessages.Remove(employee);
+        StateHasChanged();
+    }
+    #endregion
+
+    private async Task UpdateListEmployee()
+    {
+        CrudEmployeesClient client = new CrudEmployeesClient(Channel);
+        ListEmployeesReply listEmployeesReply = await client.ListEmployeesAsync(new Empty());
+        EmployeeMessages = listEmployeesReply.Employees.ToList();
+        StateHasChanged();
+    }
+
+    
+}

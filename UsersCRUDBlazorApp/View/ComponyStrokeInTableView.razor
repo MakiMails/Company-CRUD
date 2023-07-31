@@ -1,0 +1,52 @@
+﻿@inject GrpcChannel Channel
+@inject NavigationManager NavigationManager
+
+<tr>
+    <td class="col-1">@Company.Id</td>
+    <td class="col-2">@Company.Name</td>
+    <td class="col-3">@Company.IncomeYear</td>
+    <td class="col-4">
+        <button class="table-bnt" @onclick="OnClickEditCompanyBnt">
+            <img src="img/icons/edit.svg" width="20" height="20">
+        </button>
+    </td>
+    <td class="col-5">
+        <button class="table-bnt" @onclick="OnClickDeleteCompanyBnt">
+            <img src="img/icons/remove.svg" width="20" height="20">
+    </button></td>
+</tr>
+
+@code {
+
+    [Parameter]
+    public CompanyMessage? Company { get; set; }
+    [Parameter]
+    public Action<CompanyMessage>? OnDelete { get; set; }
+
+    #region events
+    private async void OnClickDeleteCompanyBnt()
+    {
+        await DeleteCompany();
+    }
+
+    private async void OnClickEditCompanyBnt()
+    {
+        await ToGoEditPageCompany();
+    }
+    #endregion
+
+    private async Task DeleteCompany()
+    {
+        OnDelete?.Invoke(Company);
+        CrudCompanysClient client = new CrudCompanysClient(Channel);
+        MessageReply messageReply = await client.DeleteCompanyAsync(new DeleteCompanyRequest()
+            {
+                Id = Company.Id
+            });
+    }
+
+    private async Task ToGoEditPageCompany()
+    {
+        NavigationManager.NavigateTo($"edit-company/{Company.Id}");
+    }
+}

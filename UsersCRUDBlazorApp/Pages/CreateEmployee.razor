@@ -1,0 +1,131 @@
+﻿@page "/create-employee/{idCompany:int?}"
+@inject GrpcChannel Channel
+@inject NavigationManager NavigationManager
+
+<PageTitle>Добавление сотрудника</PageTitle>
+
+<h2>Сотрудник</h2>
+<form class="form-base">
+    <label>Фамилия</label>
+    <input type="text" @bind-value="surname" />
+    <label>Имя</label>
+    <input type="text" @bind-value="name" />
+    <label>Отчество</label>
+    <input type="text" @bind-value="patronymic" />
+    <label>Должность</label>
+    <input type="text" @bind-value="post" />
+    <label>Зарплата</label>
+    <input type="number" @bind-value="salary" />
+    <label>Контракт годен до:</label>
+    <input type="date" @bind-value="termContactForData" />
+
+    <label>Копания</label>
+    @if (IdCompany != null)
+    {
+        <label>@CompanyMessage.Name</label>
+    }
+    else
+    {
+        <select @bind="SelectedCompanyId">
+            <option value="-1">Не выбрано</option>
+            @foreach (CompanyMessage companyMessage in CompanyMessages)
+            {
+                <option value="@companyMessage.Id">@companyMessage.Name</option>
+            }
+        </select>
+    }
+    <button class="base-bnt" type="button" onclick="@OnClickAddEmployeeBnt">Добавить</button>
+</form>
+
+@code {
+
+    [Parameter]
+    public int? IdCompany { get; set; }
+
+    private string surname = string.Empty;
+    private string name = string.Empty;
+    private string patronymic = string.Empty;
+    private string post = string.Empty;
+    private double salary;
+    private DateOnly termContactForData = new DateOnly(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
+
+    public List<CompanyMessage> CompanyMessages { get; set; } = new List<CompanyMessage>();
+
+    public int SelectedCompanyId { get; set; } = -1;
+    public CompanyMessage CompanyMessage { get; set; } = new CompanyMessage();
+
+    protected override async void OnInitialized()
+    {
+        if (IdCompany != null)
+        {
+            CompanyMessage = await GetCompany();
+        }
+        else
+        {
+            CompanyMessages = await GetListCompony();
+        }
+        StateHasChanged();
+    }
+
+    private async void OnClickAddEmployeeBnt()
+    {
+        await AddEmployee();
+    }
+
+    private async Task AddEmployee()
+    {
+        if (SelectedCompanyId == -1 || IdCompany == null)
+        {
+            return;
+        }
+
+        CrudEmployeesClient crudEmployeesClient = new CrudEmployeesClient(Channel);
+
+        EmployeeMessage employee = new EmployeeMessage()
+            {
+                Surname = surname,
+                Name = name,
+                Patronymic = patronymic,
+
+                Post = post,
+                Salary = salary,
+                TermContactForData = Timestamp.FromDateTime(new DateTime(termContactForData.Year, termContactForData.Month, termContactForData.Day)
+                                                                    .ToUniversalTime())
+            };
+
+        string addressPage = string.Empty;
+
+        if (IdCompany != null)
+        {
+            addressPage = $"edit-company/{IdCompany}";
+            employee.CompanyId = (int)IdCompany;
+        }
+        else
+        {
+            addressPage = "list-employee";
+            employee.CompanyId = SelectedCompanyId;
+        }
+
+        MessageReply messageReply = await crudEmployeesClient.CreateEmployeeAsync(new CreateEmployeeRequest()
+            {
+                Employee = employee
+            });
+
+        NavigationManager.NavigateTo(addressPage);
+    }
+
+    private async Task<CompanyMessage> GetCompany()
+    {
+        CrudCompanysClient client = new CrudCompanysClient(Channel);
+        return await client.GetCompanyAsync(new GetCompanyRequest() { Id = (int)IdCompany });
+    }
+
+    private async Task<List<CompanyMessage>> GetListCompony()
+    {
+        CrudCompanysClient client = new CrudCompanysClient(Channel);
+        ListCompanysReply listCompanysReply = await client.ListCompanysAsync(new Google.Protobuf.WellKnownTypes.Empty());
+        return listCompanysReply.Companys.ToList();
+    }
+
+
+}
